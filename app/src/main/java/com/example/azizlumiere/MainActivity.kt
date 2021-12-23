@@ -59,11 +59,19 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Se
                     luminositySensor,
                     SensorManager.SENSOR_DELAY_NORMAL
                 )
+                brightnessManager.startTimer()
+                Toast
+                    .makeText(this, "Resumed sensor", Toast.LENGTH_SHORT)
+                    .show()
                 false
             } else {
                 Log.d("MY LOG", "paused sensor")
                 super.onPause()
                 sensorManager.unregisterListener(this)
+                brightnessManager.stopTimer()
+                Toast
+                    .makeText(this, "Paused sensor", Toast.LENGTH_SHORT)
+                    .show()
                 true
             }
         }
@@ -130,8 +138,8 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Se
     override fun onSensorChanged(p0: SensorEvent?) {
         if (p0 != null) {
             val value = p0.values[0]
-            Log.d("MY LOG", "light sensor reading $value")
-            brightnessManager.next(value)
+            //Log.d("MY LOG", "light sensor reading $value")
+            brightnessManager.next(value, p0.timestamp)
         }
     }
 

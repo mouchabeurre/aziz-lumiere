@@ -12,7 +12,9 @@ class ProfileProvider(private val context: Context) {
         activeProfile = profile
         if (!oneshot && profile != null) {
             profile.data.forEach { entry ->
+                Log.d("MY LOG", "Active profile ${profile.name}:")
                 Log.d("MY LOG", "${entry.lux} ${entry.brightness}")
+                Log.d("MY LOG", "End current profile")
             }
             oneshot = true
         }
