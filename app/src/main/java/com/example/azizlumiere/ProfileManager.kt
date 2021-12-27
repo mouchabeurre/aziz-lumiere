@@ -25,7 +25,7 @@ class ProfileManager(private val context: Context) {
         val content = parseBuffer(buf)
         val name = getUriFilename(uri, resolver)
         val profile = Profile(name, content)
-        profiles.set(profile.name, profile)
+        profiles[profile.name] = profile
         writeProfileToInternal(profile)
         return profile
     }
@@ -51,18 +51,32 @@ class ProfileManager(private val context: Context) {
         return name
     }
 
-    private fun parseBuffer(buf: BufferedReader): List<DataPoint> {
-        return buf.lines()
-            .map lines@{ line ->
-                val data = line.split(" ")
-                val rawLux = data[0]
-                val rawBrightness = data[1]
-                val parsedLux = rawLux.toFloatOrNull() ?: return@lines null
-                val parsedBrightness = rawBrightness.toIntOrNull() ?: return@lines null
-                DataPoint(parsedLux, parsedBrightness)
+
+    companion object {
+        fun loadProfile(context: Context, name: String): Profile? {
+            val profilesDirHandle = File(context.filesDir, PROFILES_DIR_NAME)
+            val profileFile = File(profilesDirHandle, name)
+            if (!profileFile.exists()) {
+                return null
             }
-            .collect(Collectors.toList())
-            .filterNotNull()
+            val buf = BufferedReader(FileReader(profileFile))
+            val content = parseBuffer(buf)
+            return Profile(profileFile.name, content)
+        }
+
+        private fun parseBuffer(buf: BufferedReader): List<DataPoint> {
+            return buf.lines()
+                .map lines@{ line ->
+                    val data = line.split(" ")
+                    val rawLux = data[0]
+                    val rawBrightness = data[1]
+                    val parsedLux = rawLux.toFloatOrNull() ?: return@lines null
+                    val parsedBrightness = rawBrightness.toIntOrNull() ?: return@lines null
+                    DataPoint(parsedLux, parsedBrightness)
+                }
+                .collect(Collectors.toList())
+                .filterNotNull()
+        }
     }
 
     fun loadProfiles() {

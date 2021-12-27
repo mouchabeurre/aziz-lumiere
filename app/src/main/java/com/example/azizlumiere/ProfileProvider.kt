@@ -6,17 +6,18 @@ import android.util.Log
 class ProfileProvider(private val context: Context) {
     var activeProfile: Profile? = null
         private set
-    var oneshot = false
 
-    fun changeActiveProfile(profile: Profile?) {
-        activeProfile = profile
-        if (!oneshot && profile != null) {
-            profile.data.forEach { entry ->
-                Log.d("MY LOG", "Active profile ${profile.name}:")
-                Log.d("MY LOG", "${entry.lux} ${entry.brightness}")
-                Log.d("MY LOG", "End current profile")
-            }
-            oneshot = true
+    init {
+        loadSavedProfile()
+    }
+
+    fun loadSavedProfile() {
+        val profileName = getActiveProfileName(context) ?: return
+        val profile = ProfileManager.loadProfile(context, profileName) ?: return
+        log("Active profile ${profile.name}:")
+        profile.data.forEach { entry ->
+            log("   ${entry.lux} ${entry.brightness}")
         }
+        activeProfile = profile
     }
 }
