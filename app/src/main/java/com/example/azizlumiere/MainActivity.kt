@@ -112,7 +112,6 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
         val profileSelectorSpinner: Spinner = findViewById(R.id.profileSelectorSpinner)
         ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, keys)
             .also { adapter ->
-                //adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 profileSelectorSpinner.adapter = adapter
             }
     }

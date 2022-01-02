@@ -19,7 +19,7 @@ class EndlessService : Service() {
     private var mainLoop: Job? = null
     private var lastWakeUpOneShot: Long? = null
     private lateinit var screenReceiver: ScreenReceiver
-    private lateinit var luminosityListener: LuminosityListener
+    private lateinit var brightnessManager: BrightnessManager
     private lateinit var profileProvider: ProfileProvider
 
     override fun onBind(intent: Intent): IBinder? {
@@ -46,10 +46,10 @@ class EndlessService : Service() {
     override fun onCreate() {
         super.onCreate()
         profileProvider = ProfileProvider(this)
-        luminosityListener = LuminosityListener(this, profileProvider)
+        brightnessManager = BrightnessManager(profileProvider, this)
         screenReceiver = ScreenReceiver(true, {
             GlobalScope.launch(Dispatchers.IO) {
-                luminosityListener.setBrightnessOneShot()
+                brightnessManager.setBrightnessOneShot()
                 lastWakeUpOneShot = System.currentTimeMillis()
             }
         })
@@ -94,7 +94,7 @@ class EndlessService : Service() {
                 }
                 runBlocking {
                     if (screenReceiver.isScreenOn) {
-                        luminosityListener.setBrightnessAverage()
+                        brightnessManager.setBrightnessAverage()
                     }
                 }
                 delay(mainLoopDelay)

@@ -7,8 +7,8 @@ private const val MAX_BRIGHTNESS = 255f
 private const val MIN_LUMINOSITY = 0f
 private const val MAX_LUMINOSITY = 15000f
 
-class BrightnessMapper(private val profileProvider: ProfileProvider) {
-    private val brightnessBuffer: Array<BrightnessEvent?> = Array(11) { null }
+class BrightnessMapper(bufferSize: Int, private val profileProvider: ProfileProvider) {
+    private val brightnessBuffer: Array<BrightnessEvent?> = Array(bufferSize) { null }
 
     fun resetBuffer() {
         for (i in brightnessBuffer.indices) {
@@ -16,34 +16,34 @@ class BrightnessMapper(private val profileProvider: ProfileProvider) {
         }
     }
 
-    fun getBufferCount(): Int {
-        return getBufferValues().size
-    }
-
     fun next(eventValue: Float, eventTime: Long) {
         val brightness = brightnessFromLuminosity(eventValue) ?: return
         upsertBuffer(BrightnessEvent(brightness, eventTime))
     }
 
-    fun getBufferMedian(): BrightnessEvent? {
-        val bufferValues = getBufferValues()
-        if (bufferValues.isEmpty()) {
+    fun getBufferMedian(buffer: List<BrightnessEvent>): BrightnessEvent? {
+        if (buffer.isEmpty()) {
             return null
         }
-        return bufferValues.sortedBy { it.brightness }[bufferValues.size / 2]
+        return buffer.sortedBy { it.brightness }[buffer.size / 2]
     }
 
-    fun getBufferVariance(): Float {
-        val brightnessValues = getBufferValues()
+    fun getBufferStandardDeviation(buffer: List<BrightnessEvent>): Float {
+        val brightnessValues = buffer
             .map { it.brightness.toFloat() }
-        val mean = brightnessValues.sum() / getBufferValues().size
+        val mean = brightnessValues.sum() / buffer.size
         val sumOfSquare = brightnessValues.map { (it - mean).pow(2) }.sum()
-        val yes = brightnessBuffer.joinToString(", ") { "${it?.brightness}"}
-        log("buffer content: $yes")
-        return sqrt(sumOfSquare / getBufferValues().size)
+        val content = brightnessBuffer.joinToString(", ") { "${it?.brightness}" }
+        log("buffer content: $content")
+        return sqrt(sumOfSquare / buffer.size)
     }
 
-    private fun getBufferValues(): List<BrightnessEvent> {
+    fun getBufferScaleToMaxValues(buffer: List<BrightnessEvent>): Float {
+        val brightnessSum = buffer.map { it.brightness }.sum()
+        return brightnessSum / (MAX_BRIGHTNESS * buffer.size)
+    }
+
+    fun currentBuffer(): List<BrightnessEvent> {
         return brightnessBuffer.filterNotNull()
     }
 
