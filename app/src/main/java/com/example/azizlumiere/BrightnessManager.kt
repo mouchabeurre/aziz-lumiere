@@ -94,4 +94,9 @@ class BrightnessManager(
         val brightness = brightnessMapper.getBufferMedian(currentBuffer)?.brightness ?: return
         changeScreenBrightness(brightness)
     }
+
+    fun onCancel() {
+        log("brightness manager onCancel hook")
+        stopAggregation()
+    }
 }
