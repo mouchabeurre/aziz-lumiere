@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.activity.result.ActivityResult
@@ -57,7 +56,7 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
 
         profileManager = ProfileManager(this)
         profileProvider = ProfileProvider(this)
-        serviceStarted = getServiceState(this) == ServiceState.STARTED
+        serviceStarted = getServiceState(this) == ForegroundServiceState.STARTED
         log("serviceStarted=$serviceStarted")
 
         findViewById<Button>(R.id.importProfileButton).let {
@@ -77,11 +76,11 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
             button.text = if (serviceStarted) stopLabel else startLabel
             it.setOnClickListener {
                 serviceStarted = if (serviceStarted) {
-                    actionOnService(ServiceActions.STOP)
+                    actionOnService(ForegroundServiceActions.STOP)
                     button.text = startLabel
                     false
                 } else {
-                    actionOnService(ServiceActions.START)
+                    actionOnService(ForegroundServiceActions.START)
                     button.text = stopLabel
                     true
                 }
@@ -95,9 +94,9 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
         updateLoadedProfiles()
     }
 
-    private fun actionOnService(action: ServiceActions) {
-        if (getServiceState(this) == ServiceState.STOPPED && action == ServiceActions.STOP) return
-        Intent(this, EndlessService::class.java).also {
+    private fun actionOnService(action: ForegroundServiceActions) {
+        if (getServiceState(this) == ForegroundServiceState.STOPPED && action == ForegroundServiceActions.STOP) return
+        Intent(this, ForegroundService::class.java).also {
             it.action = action.name
             startForegroundService(it)
             return

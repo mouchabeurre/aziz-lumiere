@@ -50,9 +50,12 @@ class BrightnessMapper(bufferSize: Int, private val profileProvider: ProfileProv
     private fun brightnessFromLuminosity(luminosity: Float): Int? {
         val value = max(min(luminosity, MAX_LUMINOSITY), MIN_LUMINOSITY)
         val profile = profileProvider.activeProfile ?: return null
-        val lowerBound = profile.data.findLast { it.lux < value } ?: return null
+        val lowerBound = profile.data.findLast { it.lux <= value } ?: return null
         val upperBound = profile.data.reversed().findLast { it.lux >= value } ?: return null
-        val fraction = (value - lowerBound.lux) / (upperBound.lux - lowerBound.lux)
+        var fraction = 0f
+        if (lowerBound != upperBound) {
+            fraction = (value - lowerBound.lux) / (upperBound.lux - lowerBound.lux)
+        }
         val projection =
             lowerBound.brightness + (upperBound.brightness - lowerBound.brightness) * fraction
         return max(min(projection, MAX_BRIGHTNESS), MIN_BRIGHTNESS).toInt()

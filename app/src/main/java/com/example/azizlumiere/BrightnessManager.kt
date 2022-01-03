@@ -8,7 +8,7 @@ import kotlinx.coroutines.delay
 private const val BUFFER_SIZE = 6
 private const val MAX_AGGREGATION_WINDOW = 1000L
 private const val MAX_STANDARD_DEVIATION = 1.5f
-private const val EXTRA_STANDARD_DEVIATION = 4f
+private const val FLUCTUATION_MARGIN = 4f
 
 class BrightnessManager(
     profileProvider: ProfileProvider,
@@ -65,23 +65,26 @@ class BrightnessManager(
         val startTime = System.currentTimeMillis()
         var currentBufferCount = 0
         var currentTime = startTime
-        var currentDeviation = MAX_STANDARD_DEVIATION
-        var currentExtraDeviationCoef = 0f
+        var currentDeviation = MAX_STANDARD_DEVIATION + 1
+        var fluctuationRatio = 0f
         while (
-            (currentBufferCount < BUFFER_SIZE || currentDeviation > maxDeviation + currentExtraDeviationCoef * EXTRA_STANDARD_DEVIATION)
-            && (currentTime - startTime <= maxWindowMillis || currentDeviation > maxDeviation + currentExtraDeviationCoef * EXTRA_STANDARD_DEVIATION)
+            (currentBufferCount < BUFFER_SIZE || currentDeviation > maxDeviation + fluctuationRatio * FLUCTUATION_MARGIN)
+            && (currentTime - startTime <= maxWindowMillis || currentDeviation > maxDeviation + fluctuationRatio * FLUCTUATION_MARGIN)
         ) {
             delay(1200L)
             val currentBuffer = brightnessMapper.currentBuffer()
-            currentBufferCount = currentBuffer.size
-            currentDeviation = brightnessMapper.getBufferStandardDeviation(currentBuffer)
-            currentExtraDeviationCoef = brightnessMapper.getBufferScaleToMaxValues(currentBuffer)
+            if (currentBuffer.isNotEmpty()) {
+                currentBufferCount = currentBuffer.size
+                currentDeviation = brightnessMapper.getBufferStandardDeviation(currentBuffer)
+                fluctuationRatio =
+                    brightnessMapper.getBufferScaleToMaxValues(currentBuffer)
+            }
             currentTime = System.currentTimeMillis()
 
             val bufferLog = "buffer count: $currentBufferCount"
             val deviationLog = "current deviation: $currentDeviation (max: $maxDeviation)"
             val extraCoefLog =
-                "extra coef: $currentExtraDeviationCoef (${currentExtraDeviationCoef * EXTRA_STANDARD_DEVIATION})"
+                "extra coef: $fluctuationRatio (${fluctuationRatio * FLUCTUATION_MARGIN})"
             val timeDeltaLog =
                 "time delta: ${currentTime - startTime} (maxWindow: $maxWindowMillis)"
             log("$bufferLog, $deviationLog, $extraCoefLog, $timeDeltaLog")
