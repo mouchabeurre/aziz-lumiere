@@ -64,7 +64,7 @@ class ProfileManager(private val context: Context) {
             return Profile(profileFile.name, content)
         }
 
-        private fun parseBuffer(buf: BufferedReader): List<DataPoint> {
+        private fun parseBuffer(buf: BufferedReader): List<ProfileDataPoint> {
             return buf.lines()
                 .map lines@{ line ->
                     val data = line.split(" ")
@@ -72,7 +72,7 @@ class ProfileManager(private val context: Context) {
                     val rawBrightness = data[1]
                     val parsedLux = rawLux.toFloatOrNull() ?: return@lines null
                     val parsedBrightness = rawBrightness.toIntOrNull() ?: return@lines null
-                    DataPoint(parsedLux, parsedBrightness)
+                    ProfileDataPoint(parsedLux, parsedBrightness)
                 }
                 .collect(Collectors.toList())
                 .filterNotNull()

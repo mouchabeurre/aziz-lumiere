@@ -1,6 +1,6 @@
 package com.example.azizlumiere
 
-enum class ServiceActions {
+enum class ForegroundServiceActions {
     START,
     STOP
 }
