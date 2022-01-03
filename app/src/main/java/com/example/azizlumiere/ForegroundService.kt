@@ -39,34 +39,37 @@ class ForegroundService : Service() {
 
         mainJob = GlobalScope.launch(Dispatchers.IO) {
             coroutineScope {
-                while (isServiceStarted) {
-                    lastWakeUpOneShot?.let {
-                        val timeDelta = System.currentTimeMillis() - it
-                        if (timeDelta < MAIN_JOB_DELAY) {
-                            log("offsetting current loop by ${MAIN_JOB_DELAY - timeDelta}ms")
-                            delay(MAIN_JOB_DELAY - timeDelta)
+                try {
+                    while (isServiceStarted) {
+                        lastWakeUpOneShot?.let {
+                            val timeDelta = System.currentTimeMillis() - it
+                            if (timeDelta < MAIN_JOB_DELAY) {
+                                log("offsetting current loop by ${MAIN_JOB_DELAY - timeDelta}ms")
+                                delay(MAIN_JOB_DELAY - timeDelta)
+                            }
                         }
-                    }
-                    if (screenReceiver.isScreenOn) {
-                        withContext(Dispatchers.IO) {
-                            brightnessManager.setBrightnessAverage()
+                        if (screenReceiver.isScreenOn) {
+                            withContext(Dispatchers.IO) {
+                                brightnessManager.setBrightnessAverage()
+                            }
                         }
+                        delay(MAIN_JOB_DELAY)
                     }
-                    delay(MAIN_JOB_DELAY)
+                } finally {
+                    brightnessManager.onCancel()
                 }
             }
-            log("End of the loop for the service")
         }
     }
 
     private fun stopService() {
         if (!isServiceStarted) return
         log("Stopping the foreground service")
+        Toast.makeText(this, "Service stopping", Toast.LENGTH_SHORT).show()
         mainJob?.let {
             log("cancelling main loop job")
             it.cancel()
         }
-        Toast.makeText(this, "Service stopping", Toast.LENGTH_SHORT).show()
         try {
             stopForeground(true)
             stopSelf()
@@ -85,9 +88,6 @@ class ForegroundService : Service() {
 
     private fun createNotification(): Notification {
         val notificationChannelId = "AZIZ LUMIERE SERVICE CHANNEL"
-
-        // depending on the Android API that we're dealing with we will have
-        // to use a specific method to create the notification
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channel = NotificationChannel(
@@ -132,16 +132,14 @@ class ForegroundService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         log("onStartCommand executed with startId: $startId")
-        if (intent != null) {
-            val action = intent.action
+        intent?.let {
+            val action = it.action
             log("using an intent with action $action")
             when (action) {
                 ForegroundServiceActions.START.name -> startService()
                 ForegroundServiceActions.STOP.name -> stopService()
                 else -> log("This should never happen. No action in the received intent")
             }
-        } else {
-            log("with a null intent. It has been probably restarted by the system.")
         }
         return START_STICKY
     }
