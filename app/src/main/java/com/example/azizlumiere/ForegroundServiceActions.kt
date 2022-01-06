@@ -2,5 +2,6 @@ package com.example.azizlumiere
 
 enum class ForegroundServiceActions {
     START,
-    STOP
+    STOP,
+    RELOAD_CONFIG
 }

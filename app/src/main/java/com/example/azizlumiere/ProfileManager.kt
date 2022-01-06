@@ -35,7 +35,7 @@ class ProfileManager(private val context: Context) {
         val newFile = File(profilesDirHandle, profile.name)
         val writer = FileWriter(newFile)
         val content = profile.data.joinToString("\n") { entry ->
-            "${entry.lux} ${entry.brightness}"
+            "${entry.illumination} ${entry.brightness}"
         }
         writer.append(content)
         writer.flush()

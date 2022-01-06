@@ -6,19 +6,19 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 
-class LuminosityReader(
+class IlluminationReader(
     context: Context,
     private val onEvent: (event: SensorEvent) -> Unit,
 ) : SensorEventListener {
     private val sensorManager =
         context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    private val luminositySensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)
+    private val lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)
 
     fun start() {
         log("start sensor")
         sensorManager.registerListener(
             this,
-            luminositySensor,
+            lightSensor,
             SensorManager.SENSOR_DELAY_NORMAL
         )
     }

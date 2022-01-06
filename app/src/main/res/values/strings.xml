@@ -1,3 +1,35 @@
 <resources>
-    <string name="app_name">Aziz Lumiere</string>
+    <string name="app_name">Aziz Lumière</string>
+    <string name="title_activity_settings">Settings</string>
+
+    /* user preferences strings */
+    <string name="main_job_interval_preference_key">main_job_interval</string>
+    <string name="main_job_interval_preference_value">5000</string>
+    <string name="main_job_interval_preference_title">Service interval</string>
+    <string name="main_job_interval_preference_summary">Interval (in milliseconds) between each luminosity processing</string>
+
+    <string name="aggregate_sensor_values_preference_key">aggregate_sensor_values</string>
+    <string name="aggregate_sensor_values_preference_value">"true</string>
+    <string name="aggregate_sensor_values_preference_title">Aggregate sensor values</string>
+    <string name="aggregate_sensor_values_preference_summary">Derive brightness from multiple sensor reads</string>
+
+    <string name="buffer_size_preference_key">buffer_size</string>
+    <string name="buffer_size_preference_value">6</string>
+    <string name="buffer_size_preference_title">Aggregation buffer size</string>
+
+    <string name="min_aggregation_window_preference_key">min_aggregation_window</string>
+    <string name="min_aggregation_window_preference_value">1000</string>
+    <string name="min_aggregation_window_preference_title">Minimum aggregation window</string>
+    <string name="min_aggregation_window_preference_summary">Minimum time (in milliseconds) to wait for sensor events before brightness calculation</string>
+
+    <string name="max_standard_deviation_preference_key">max_standard_deviation</string>
+    <string name="max_standard_deviation_preference_value">1.5</string>
+    <string name="max_standard_deviation_preference_title">Buffer standard deviation threshold</string>
+    <string name="max_standard_deviation_preference_summary">Buffer standard deviation threshold to reach before brightness calculation (the lower the stricter)</string>
+
+    <string name="standard_deviation_fluctuation_margin_preference_key">standard_deviation_fluctuation_margin</string>
+    <string name="standard_deviation_fluctuation_margin_preference_value">4.0</string>
+    <string name="standard_deviation_fluctuation_margin_preference_title">Standard deviation fluctuation margin</string>
+    <string name="standard_deviation_fluctuation_margin_preference_summary">Margin (scaled to the overall buffer values height) to add to the standard deviation threshold. It increases the acceptable threshold as higher illuminance values fill the buffer</string>
+
 </resources>

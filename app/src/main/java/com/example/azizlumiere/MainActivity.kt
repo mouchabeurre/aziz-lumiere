@@ -11,18 +11,23 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.example.azizlumiere.UserPreferencesRepository.Companion.userPreferencesStore
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+
 
 class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
 
     private lateinit var profileManager: ProfileManager
-    private lateinit var profileProvider: ProfileProvider
+    private lateinit var userPreferencesRepository: UserPreferencesRepository
     private val profilePickerLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
             if (result.resultCode == Activity.RESULT_OK) {
                 result.data?.data?.let { uri ->
                     val profile = profileManager.addProfile(uri)
                     if (profile != null) {
-                        updateLoadedProfiles()
+                        loadProfileSpinner()
                         Toast
                             .makeText(
                                 this,
@@ -54,8 +59,8 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
             changeWriteSettingsPermission()
         }
 
+        userPreferencesRepository = UserPreferencesRepository(this)
         profileManager = ProfileManager(this)
-        profileProvider = ProfileProvider(this)
         serviceStarted = getServiceState(this) == ForegroundServiceState.STARTED
         log("serviceStarted=$serviceStarted")
 
@@ -87,11 +92,31 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
             }
         }
 
-        findViewById<Spinner>(R.id.profileSelectorSpinner).let {
+        findViewById<Button>(R.id.reloadServiceButton).let {
+            it.setOnClickListener {
+                actionOnService(ForegroundServiceActions.RELOAD_CONFIG)
+            }
+        }
+
+        val profileSelectorSpinner = findViewById<Spinner>(R.id.profileSelectorSpinner).also {
             it.onItemSelectedListener = this
         }
 
-        updateLoadedProfiles()
+        findViewById<Button>(R.id.openSettingsButton).let {
+            it.setOnClickListener {
+                val intent = Intent(this, SettingsActivity::class.java)
+                startActivity(intent)
+            }
+        }
+
+        loadProfileSpinner()
+
+        lifecycleScope.launch {
+            userPreferencesStore.data.collect { userPreferences ->
+                val adapter = profileSelectorSpinner.adapter as ArrayAdapter<String>
+                profileSelectorSpinner.setSelection(adapter.getPosition(userPreferences.activeProfile))
+            }
+        }
     }
 
     private fun actionOnService(action: ForegroundServiceActions) {
@@ -103,28 +128,45 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
         }
     }
 
-    private fun updateLoadedProfiles() {
+    private fun loadProfileSpinner() {
         profileManager.loadProfiles()
         val loadedProfiles = profileManager.profiles
         val keys = loadedProfiles.keys.toList()
 
-        val profileSelectorSpinner: Spinner = findViewById(R.id.profileSelectorSpinner)
-        ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, keys)
-            .also { adapter ->
-                profileSelectorSpinner.adapter = adapter
+        lifecycleScope.launch {
+            userPreferencesStore.data.first().let { userPreferences ->
+                val profileSelectorSpinner: Spinner = findViewById(R.id.profileSelectorSpinner)
+                ArrayAdapter(this@MainActivity, R.layout.support_simple_spinner_dropdown_item, keys)
+                    .also { adapter ->
+                        profileSelectorSpinner.adapter = adapter
+                        if (userPreferences.activeProfile.isNotEmpty()) {
+                            profileSelectorSpinner.setSelection(adapter.getPosition(userPreferences.activeProfile))
+                        } else {
+                            keys.getOrNull(0)?.let {
+                                userPreferencesRepository.setActiveProfile(it)
+                            }
+                        }
+                    }
             }
+        }
     }
 
-    override fun onNothingSelected(p0: AdapterView<*>?) {
+    override fun onNothingSelected(adapterView: AdapterView<*>?) {
         log("didn't click spinner item")
     }
 
-    override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-        log("clicked item $p2: ${p0?.getItemAtPosition(p2)}")
-        if (p0 != null) {
-            val profile = profileManager.profiles[p0.getItemAtPosition(p2)] ?: return
-            setActiveProfileName(this, profile)
-            profileProvider.loadSavedProfile()
+    override fun onItemSelected(adapterView: AdapterView<*>?, view: View?, index: Int, p3: Long) {
+        log("clicked item $index: ${adapterView?.getItemAtPosition(index)}")
+        adapterView?.let {
+            profileManager.profiles[it.getItemAtPosition(index)]?.let { profile ->
+                lifecycleScope.launch {
+                    userPreferencesStore.data.first().let { userPreferences ->
+                        if (userPreferences.activeProfile != profile.name) {
+                            userPreferencesRepository.setActiveProfile(profile.name)
+                        }
+                    }
+                }
+            }
         }
     }
 
