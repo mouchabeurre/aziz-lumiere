@@ -5,20 +5,15 @@ import android.hardware.SensorEvent
 import android.provider.Settings
 import kotlinx.coroutines.delay
 
-private const val BUFFER_SIZE = 6
-private const val MAX_AGGREGATION_WINDOW = 1000L
-private const val MAX_STANDARD_DEVIATION = 1.5f
-private const val FLUCTUATION_MARGIN = 4f
-
 class BrightnessManager(
-    profileProvider: ProfileProvider,
+    activeProfile: Profile,
+    private val config: UserPreferences,
     private val context: Context,
 ) {
+    private val illuminationReader = IlluminationReader(context, ::onIlluminationEvent)
+    private val brightnessMapper = BrightnessMapper(config.bufferSize, activeProfile)
 
-    private val brightnessMapper = BrightnessMapper(BUFFER_SIZE, profileProvider)
-    private val luminosityReader = LuminosityReader(context, ::onLuminosityEvent)
-
-    private fun onLuminosityEvent(event: SensorEvent) {
+    private fun onIlluminationEvent(event: SensorEvent) {
         val value = event.values[0]
         val timestamp = event.timestamp
         brightnessMapper.next(value, timestamp)
@@ -26,11 +21,11 @@ class BrightnessManager(
 
     private fun startAggregation() {
         brightnessMapper.resetBuffer()
-        luminosityReader.start()
+        illuminationReader.start()
     }
 
     private fun stopAggregation() {
-        luminosityReader.stop()
+        illuminationReader.stop()
     }
 
     private fun changeScreenBrightness(brightness: Int) {
@@ -53,23 +48,25 @@ class BrightnessManager(
         }
         val currentBuffer = brightnessMapper.currentBuffer()
         stopAggregation()
-        val brightness = brightnessMapper.getBufferMedian(currentBuffer)?.brightness ?: return
-        changeScreenBrightness(brightness)
+        brightnessMapper.getBufferMedian(currentBuffer)?.let { brightnessEvent ->
+            changeScreenBrightness(brightnessEvent.brightness)
+        }
     }
 
-    suspend fun setBrightnessAverage(
-        maxWindowMillis: Long = MAX_AGGREGATION_WINDOW,
-        maxDeviation: Float = MAX_STANDARD_DEVIATION
-    ) {
+    suspend fun setBrightnessAverage() {
         startAggregation()
+        val minAggregationWindow = config.minAggregationWindow
+        val maxStandardDeviation = config.baseStandardDeviation
+        val fluctuationMargin = config.extraStandardDeviation
+        val bufferSize = config.bufferSize
         val startTime = System.currentTimeMillis()
         var currentBufferCount = 0
         var currentTime = startTime
-        var currentDeviation = MAX_STANDARD_DEVIATION + 1
+        var currentDeviation = maxStandardDeviation + 1
         var fluctuationRatio = 0f
         while (
-            (currentBufferCount < BUFFER_SIZE || currentDeviation > maxDeviation + fluctuationRatio * FLUCTUATION_MARGIN)
-            && (currentTime - startTime <= maxWindowMillis || currentDeviation > maxDeviation + fluctuationRatio * FLUCTUATION_MARGIN)
+            (currentBufferCount < bufferSize || currentDeviation > maxStandardDeviation + fluctuationRatio * fluctuationMargin)
+            && (currentTime - startTime <= minAggregationWindow || currentDeviation > maxStandardDeviation + fluctuationRatio * fluctuationMargin)
         ) {
             delay(1200L)
             val currentBuffer = brightnessMapper.currentBuffer()
@@ -82,17 +79,18 @@ class BrightnessManager(
             currentTime = System.currentTimeMillis()
 
             val bufferLog = "buffer count: $currentBufferCount"
-            val deviationLog = "current deviation: $currentDeviation (max: $maxDeviation)"
+            val deviationLog = "current deviation: $currentDeviation (max: $maxStandardDeviation)"
             val extraCoefLog =
-                "extra coef: $fluctuationRatio (${fluctuationRatio * FLUCTUATION_MARGIN})"
+                "extra coef: $fluctuationRatio (${fluctuationRatio * fluctuationMargin})"
             val timeDeltaLog =
-                "time delta: ${currentTime - startTime} (maxWindow: $maxWindowMillis)"
+                "time delta: ${currentTime - startTime} (maxWindow: $minAggregationWindow)"
             log("$bufferLog, $deviationLog, $extraCoefLog, $timeDeltaLog")
         }
         val currentBuffer = brightnessMapper.currentBuffer()
         stopAggregation()
-        val brightness = brightnessMapper.getBufferMedian(currentBuffer)?.brightness ?: return
-        changeScreenBrightness(brightness)
+        brightnessMapper.getBufferMedian(currentBuffer)?.let { brightnessEvent ->
+            changeScreenBrightness(brightnessEvent.brightness)
+        }
     }
 
     fun onCancel() {

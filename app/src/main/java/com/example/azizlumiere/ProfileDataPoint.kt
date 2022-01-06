@@ -1,4 +1,4 @@
 package com.example.azizlumiere
 
-data class ProfileDataPoint(val lux: Float, val brightness: Int) {
+data class ProfileDataPoint(val illumination: Float, val brightness: Int) {
 }

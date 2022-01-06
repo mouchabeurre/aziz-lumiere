@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+option java_package = "com.example.azizlumiere";
+option java_multiple_files = true;
+
+message UserPreferences {
+  string active_profile = 1;
+  uint64 main_job_interval = 2;
+  bool aggregate_sensor_values = 3;
+  uint32 buffer_size = 4;
+  uint64 min_aggregation_window = 5;
+  float base_standard_deviation = 6;
+  float extra_standard_deviation = 7;
+}

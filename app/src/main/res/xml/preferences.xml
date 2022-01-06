@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <EditTextPreference
+        android:inputType="number"
+        android:key="@string/main_job_interval_preference_key"
+        android:persistent="false"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:summary="@string/main_job_interval_preference_summary"
+        android:title="@string/main_job_interval_preference_title" />
+    <SwitchPreference
+        android:key="@string/aggregate_sensor_values_preference_key"
+        android:persistent="false"
+        android:summary="@string/aggregate_sensor_values_preference_summary"
+        android:title="@string/aggregate_sensor_values_preference_title" />
+    <EditTextPreference
+        android:dependency="@string/aggregate_sensor_values_preference_key"
+        android:inputType="number"
+        android:key="@string/buffer_size_preference_key"
+        android:persistent="false"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/buffer_size_preference_title" />
+    <EditTextPreference
+        android:dependency="@string/aggregate_sensor_values_preference_key"
+        android:inputType="number"
+        android:key="@string/min_aggregation_window_preference_key"
+        android:persistent="false"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:summary="@string/min_aggregation_window_preference_summary"
+        android:title="@string/min_aggregation_window_preference_title" />
+    <EditTextPreference
+        android:dependency="@string/aggregate_sensor_values_preference_key"
+        android:inputType="numberDecimal"
+        android:key="@string/base_standard_deviation_preference_key"
+        android:persistent="false"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:summary="@string/base_standard_deviation_preference_summary"
+        android:title="@string/base_standard_deviation_preference_title" />
+    <EditTextPreference
+        android:dependency="@string/aggregate_sensor_values_preference_key"
+        android:inputType="numberDecimal"
+        android:key="@string/extra_standard_deviation_preference_key"
+        android:persistent="false"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:summary="@string/extra_standard_deviation_preference_summary"
+        android:title="@string/extra_standard_deviation_preference_title" />
+</PreferenceScreen>

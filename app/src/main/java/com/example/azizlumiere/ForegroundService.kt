@@ -9,21 +9,14 @@ import android.os.Binder
 import android.os.IBinder
 import android.os.SystemClock
 import android.widget.Toast
+import com.example.azizlumiere.UserPreferencesRepository.Companion.userPreferencesStore
 import kotlinx.coroutines.*
-
-private const val MAIN_JOB_DELAY = 5000L
+import kotlinx.coroutines.flow.first
 
 class ForegroundService : Service() {
-    private val screenIntentFilter = IntentFilter(Intent.ACTION_SCREEN_OFF).apply {
-        addAction(Intent.ACTION_SCREEN_ON)
-    }
     private val localBinder = LocalBinder()
     private var isServiceStarted = false
     private var mainJob: Job? = null
-    private var lastWakeUpOneShot: Long? = null
-    private lateinit var screenReceiver: ScreenReceiver
-    private lateinit var brightnessManager: BrightnessManager
-    private lateinit var profileProvider: ProfileProvider
 
     private fun startService() {
         if (isServiceStarted) return
@@ -31,45 +24,17 @@ class ForegroundService : Service() {
         Toast.makeText(this, "Service starting its task", Toast.LENGTH_SHORT).show()
         isServiceStarted = true
         setServiceState(this, ForegroundServiceState.STARTED)
-        registerReceiver(screenReceiver, screenIntentFilter)
-
+        updateConfigAndReload()
         sendBroadcast(Intent().also {
             it.action = ForegroundServiceBroadcastActions.STARTED.name
         })
-
-        mainJob = GlobalScope.launch(Dispatchers.IO) {
-            coroutineScope {
-                try {
-                    while (isServiceStarted) {
-                        lastWakeUpOneShot?.let {
-                            val timeDelta = System.currentTimeMillis() - it
-                            if (timeDelta < MAIN_JOB_DELAY) {
-                                log("offsetting current loop by ${MAIN_JOB_DELAY - timeDelta}ms")
-                                delay(MAIN_JOB_DELAY - timeDelta)
-                            }
-                        }
-                        if (screenReceiver.isScreenOn) {
-                            withContext(Dispatchers.IO) {
-                                brightnessManager.setBrightnessAverage()
-                            }
-                        }
-                        delay(MAIN_JOB_DELAY)
-                    }
-                } finally {
-                    brightnessManager.onCancel()
-                }
-            }
-        }
     }
 
     private fun stopService() {
         if (!isServiceStarted) return
         log("Stopping the foreground service")
         Toast.makeText(this, "Service stopping", Toast.LENGTH_SHORT).show()
-        mainJob?.let {
-            log("cancelling main loop job")
-            it.cancel()
-        }
+        endJob()
         try {
             stopForeground(true)
             stopSelf()
@@ -78,12 +43,80 @@ class ForegroundService : Service() {
         }
         isServiceStarted = false
         setServiceState(this, ForegroundServiceState.STOPPED)
-        unregisterReceiver(screenReceiver)
 
         sendBroadcast(Intent().also {
             it.action = ForegroundServiceBroadcastActions.STOPPED.name
         })
+    }
 
+    private fun beginJob(config: UserPreferences, activeProfile: Profile) {
+        endJob()
+        log("beginning main loop job")
+        var lastWakeUpOneShot: Long? = null
+        val brightnessManager = BrightnessManager(activeProfile, config, this)
+        val screenReceiver = ScreenReceiver(true, {
+            GlobalScope.launch(Dispatchers.IO) {
+                if (mainJob?.isActive == true) {
+                    brightnessManager.setBrightnessOneShot()
+                    lastWakeUpOneShot = System.currentTimeMillis()
+                }
+            }
+        }).also { screenReceiver ->
+            val screenIntentFilter = IntentFilter().also {
+                it.addAction(Intent.ACTION_SCREEN_OFF)
+                it.addAction(Intent.ACTION_SCREEN_ON)
+            }
+            registerReceiver(screenReceiver, screenIntentFilter)
+        }
+        mainJob = GlobalScope.launch(Dispatchers.IO) {
+            coroutineScope {
+                try {
+                    while (true) {
+                        lastWakeUpOneShot?.let {
+                            val timeDelta = System.currentTimeMillis() - it
+                            if (timeDelta < config.mainJobInterval) {
+                                log("offsetting current loop by ${config.mainJobInterval - timeDelta}ms")
+                                delay(config.mainJobInterval - timeDelta)
+                            }
+                        }
+                        if (screenReceiver.isScreenOn) {
+                            withContext(Dispatchers.IO) {
+                                if (config.aggregateSensorValues) {
+                                    brightnessManager.setBrightnessAverage()
+                                } else {
+                                    brightnessManager.setBrightnessOneShot()
+                                }
+                            }
+                        }
+                        delay(config.mainJobInterval)
+                    }
+                } finally {
+                    brightnessManager.onCancel()
+                    unregisterReceiver(screenReceiver)
+                }
+            }
+        }
+    }
+
+    private fun endJob() {
+        mainJob?.let {
+            if (it.isActive) {
+                log("ending main loop job")
+                it.cancel()
+            }
+        }
+    }
+
+    private fun updateConfigAndReload() {
+        endJob()
+        GlobalScope.launch {
+            userPreferencesStore.data.first().let { config ->
+                ProfileManager.loadProfile(this@ForegroundService, config.activeProfile)
+                    ?.let { profile ->
+                        beginJob(config, profile)
+                    }
+            }
+        }
     }
 
     private fun createNotification(): Notification {
@@ -138,6 +171,7 @@ class ForegroundService : Service() {
             when (action) {
                 ForegroundServiceActions.START.name -> startService()
                 ForegroundServiceActions.STOP.name -> stopService()
+                ForegroundServiceActions.RELOAD_CONFIG.name -> updateConfigAndReload()
                 else -> log("This should never happen. No action in the received intent")
             }
         }
@@ -146,14 +180,6 @@ class ForegroundService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        profileProvider = ProfileProvider(this)
-        brightnessManager = BrightnessManager(profileProvider, this)
-        screenReceiver = ScreenReceiver(true, {
-            GlobalScope.launch(Dispatchers.IO) {
-                brightnessManager.setBrightnessOneShot()
-                lastWakeUpOneShot = System.currentTimeMillis()
-            }
-        })
         log("The service has been created".uppercase())
         val notification = createNotification()
         startForeground(1, notification)
