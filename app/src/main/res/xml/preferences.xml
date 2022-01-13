@@ -33,19 +33,19 @@
     <EditTextPreference
         android:dependency="@string/aggregate_sensor_values_preference_key"
         android:inputType="numberDecimal"
-        android:key="@string/max_standard_deviation_preference_key"
+        android:key="@string/base_standard_deviation_preference_key"
         android:persistent="false"
         android:selectAllOnFocus="true"
         android:singleLine="true"
-        android:summary="@string/max_standard_deviation_preference_summary"
-        android:title="@string/max_standard_deviation_preference_title" />
+        android:summary="@string/base_standard_deviation_preference_summary"
+        android:title="@string/base_standard_deviation_preference_title" />
     <EditTextPreference
         android:dependency="@string/aggregate_sensor_values_preference_key"
         android:inputType="numberDecimal"
-        android:key="@string/standard_deviation_fluctuation_margin_preference_key"
+        android:key="@string/extra_standard_deviation_preference_key"
         android:persistent="false"
         android:selectAllOnFocus="true"
         android:singleLine="true"
-        android:summary="@string/standard_deviation_fluctuation_margin_preference_summary"
-        android:title="@string/standard_deviation_fluctuation_margin_preference_title" />
+        android:summary="@string/extra_standard_deviation_preference_summary"
+        android:title="@string/extra_standard_deviation_preference_title" />
 </PreferenceScreen>

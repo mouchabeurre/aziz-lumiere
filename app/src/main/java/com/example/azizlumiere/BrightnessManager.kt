@@ -56,8 +56,8 @@ class BrightnessManager(
     suspend fun setBrightnessAverage() {
         startAggregation()
         val minAggregationWindow = config.minAggregationWindow
-        val maxStandardDeviation = config.maxStandardDeviation
-        val fluctuationMargin = config.standardDeviationFluctuationMargin
+        val maxStandardDeviation = config.baseStandardDeviation
+        val fluctuationMargin = config.extraStandardDeviation
         val bufferSize = config.bufferSize
         val startTime = System.currentTimeMillis()
         var currentBufferCount = 0

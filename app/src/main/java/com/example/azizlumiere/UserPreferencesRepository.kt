@@ -60,20 +60,20 @@ class UserPreferencesRepository(private val context: Context) {
         }
     }
 
-    suspend fun setMaxStandardDeviation(threshold: Float) {
+    suspend fun setBaseStandardDeviation(threshold: Float) {
         context.userPreferencesStore.updateData { store ->
             log("updating store max std deviation with $threshold")
             store.toBuilder()
-                .setMaxStandardDeviation(threshold)
+                .setBaseStandardDeviation(threshold)
                 .build()
         }
     }
 
-    suspend fun setStandardDeviationFluctuationMargin(margin: Float) {
+    suspend fun setExtraStandardDeviation(margin: Float) {
         context.userPreferencesStore.updateData { store ->
             log("updating store std deviation fluctuation margin with $margin")
             store.toBuilder()
-                .setStandardDeviationFluctuationMargin(margin)
+                .setExtraStandardDeviation(margin)
                 .build()
         }
     }

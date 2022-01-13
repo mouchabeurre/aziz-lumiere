@@ -25,7 +25,14 @@ class BrightnessMapper(bufferSize: Int, private val profile: Profile) {
         if (buffer.isEmpty()) {
             return null
         }
-        return buffer.sortedBy { it.brightness }[buffer.size / 2]
+        buffer.sortedBy { it.brightness }.let { sortedBuffer ->
+            val index = if (sortedBuffer.size % 2 == 0) {
+                sortedBuffer.size / 2 - 1
+            } else {
+                sortedBuffer.size / 2
+            }
+            return sortedBuffer[index]
+        }
     }
 
     fun getBufferStandardDeviation(buffer: List<BrightnessEvent>): Float {
@@ -33,7 +40,7 @@ class BrightnessMapper(bufferSize: Int, private val profile: Profile) {
             .map { it.brightness.toFloat() }
         val mean = brightnessValues.sum() / buffer.size
         val sumOfSquare = brightnessValues.map { (it - mean).pow(2) }.sum()
-        val content = currentBuffer().joinToString(", ") { "[${it.brightness} ${it.illumination}]" }
+        val content = buffer.joinToString(", ") { "[${it.brightness} ${it.illumination}]" }
         log("buffer content: $content")
         return sqrt(sumOfSquare / buffer.size)
     }
@@ -52,14 +59,14 @@ class BrightnessMapper(bufferSize: Int, private val profile: Profile) {
         val lowerBound = profile.data.findLast { it.illumination <= value } ?: return null
         val upperBound =
             profile.data.reversed().findLast { it.illumination >= value } ?: return null
-        var fraction = 0f
-        if (lowerBound != upperBound) {
-            fraction =
-                (value - lowerBound.illumination) / (upperBound.illumination - lowerBound.illumination)
+        val fraction = if (lowerBound != upperBound) {
+            (value - lowerBound.illumination) / (upperBound.illumination - lowerBound.illumination)
+        } else {
+            0f
         }
         val projection =
             lowerBound.brightness + (upperBound.brightness - lowerBound.brightness) * fraction
-        return max(min(projection, MAX_BRIGHTNESS), MIN_BRIGHTNESS).toInt()
+        return max(min(projection, MAX_BRIGHTNESS), MIN_BRIGHTNESS).roundToInt()
     }
 
     private fun upsertBuffer(value: BrightnessEvent) {

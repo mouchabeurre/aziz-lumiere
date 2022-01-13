@@ -2,14 +2,13 @@ package com.example.azizlumiere
 
 import android.os.Bundle
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.EditTextPreference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import com.example.azizlumiere.UserPreferencesRepository.Companion.userPreferencesStore
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.launch
 
 class SettingsActivity : AppCompatActivity() {
@@ -51,9 +50,19 @@ class SettingsActivity : AppCompatActivity() {
                 ?.also {
                     it.setOnPreferenceChangeListener { _, newValue ->
                         (newValue as String).toLongOrNull()?.let { value ->
-                            lifecycleScope.launch {
-                                userPreferencesRepository.setMainJobInterval(value)
+                            if (value > 0) {
+                                lifecycleScope.launch {
+                                    userPreferencesRepository.setMainJobInterval(value)
+                                }
+                            } else {
+                                showValidationError(
+                                    getString(R.string.main_job_interval_preference_validation_positive)
+                                )
                             }
+                        } ?: run {
+                            showValidationError(
+                                getString(R.string.main_job_interval_preference_validation_type)
+                            )
                         }
                         false
                     }
@@ -75,9 +84,19 @@ class SettingsActivity : AppCompatActivity() {
                 ?.also {
                     it.setOnPreferenceChangeListener { _, newValue ->
                         (newValue as String).toIntOrNull()?.let { value ->
-                            lifecycleScope.launch {
-                                userPreferencesRepository.setBufferSize(value)
+                            if (value > 0) {
+                                lifecycleScope.launch {
+                                    userPreferencesRepository.setBufferSize(value)
+                                }
+                            } else {
+                                showValidationError(
+                                    getString(R.string.buffer_size_preference_validation_positive)
+                                )
                             }
+                        } ?: run {
+                            showValidationError(
+                                getString(R.string.buffer_size_preference_validation_type)
+                            )
                         }
                         false
                     }
@@ -87,35 +106,66 @@ class SettingsActivity : AppCompatActivity() {
                 ?.also {
                     it.setOnPreferenceChangeListener { _, newValue ->
                         (newValue as String).toLongOrNull()?.let { value ->
-                            lifecycleScope.launch {
-                                userPreferencesRepository.setMinAggregationWindow(value)
+                            if (value >= 0) {
+                                lifecycleScope.launch {
+                                    userPreferencesRepository.setMinAggregationWindow(value)
+                                }
+                            } else {
+                                showValidationError(
+                                    getString(R.string.min_aggregation_window_preference_validation_positive)
+                                )
                             }
+                        } ?: run {
+                            showValidationError(
+                                getString(R.string.min_aggregation_window_preference_validation_type)
+                            )
                         }
                         false
                     }
                 }
             val maxStandardDeviationPreference = preferenceScreen
-                .findPreference<EditTextPreference>(getString(R.string.max_standard_deviation_preference_key))
+                .findPreference<EditTextPreference>(getString(R.string.base_standard_deviation_preference_key))
                 ?.also {
                     it.setOnPreferenceChangeListener { _, newValue ->
                         (newValue as String).toFloatOrNull()?.let { value ->
-                            lifecycleScope.launch {
-                                userPreferencesRepository.setMaxStandardDeviation(value)
+                            if (value >= 0) {
+                                lifecycleScope.launch {
+                                    userPreferencesRepository.setBaseStandardDeviation(value)
+                                }
+                            } else {
+                                showValidationError(
+                                    getString(R.string.min_aggregation_window_preference_validation_positive)
+                                )
                             }
+                        } ?: run {
+                            showValidationError(
+                                getString(R.string.min_aggregation_window_preference_validation_type)
+                            )
                         }
                         false
                     }
                 }
             val standardDeviationFluctuationMarginPreference = preferenceScreen
-                .findPreference<EditTextPreference>(getString(R.string.standard_deviation_fluctuation_margin_preference_key))
+                .findPreference<EditTextPreference>(getString(R.string.extra_standard_deviation_preference_key))
                 ?.also {
                     it.setOnPreferenceChangeListener { _, newValue ->
                         (newValue as String).toFloatOrNull()?.let { value ->
-                            lifecycleScope.launch {
-                                userPreferencesRepository.setStandardDeviationFluctuationMargin(
-                                    value
+                            if (value >= 0) {
+
+                                lifecycleScope.launch {
+                                    userPreferencesRepository.setExtraStandardDeviation(
+                                        value
+                                    )
+                                }
+                            } else {
+                                showValidationError(
+                                    getString(R.string.extra_standard_deviation_preference_validation_positive)
                                 )
                             }
+                        } ?: run {
+                            showValidationError(
+                                getString(R.string.extra_standard_deviation_preference_validation_type)
+                            )
                         }
                         false
                     }
@@ -130,13 +180,17 @@ class SettingsActivity : AppCompatActivity() {
                     minAggregationWindowPreference?.text =
                         userPreferences.minAggregationWindow.toString()
                     maxStandardDeviationPreference?.text =
-                        userPreferences.maxStandardDeviation.toString()
+                        userPreferences.baseStandardDeviation.toString()
                     standardDeviationFluctuationMarginPreference?.text =
-                        userPreferences.standardDeviationFluctuationMargin.toString()
+                        userPreferences.extraStandardDeviation.toString()
                     log("updated preference screen preferences")
                 }
             }
+        }
 
+        private fun showValidationError(message: String) {
+            val errorMessage = "${getString(R.string.preference_validation_error)}: $message"
+            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
         }
     }
 }
