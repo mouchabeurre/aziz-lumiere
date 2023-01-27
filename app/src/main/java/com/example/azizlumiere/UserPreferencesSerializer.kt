@@ -13,8 +13,8 @@ object UserPreferencesSerializer : Serializer<UserPreferences> {
         .setAggregateSensorValues(true)
         .setBufferSize(6)
         .setMinAggregationWindow(1000)
-        .setBaseStandardDeviation(1.5f)
-        .setExtraStandardDeviation(4f)
+        .setMaxStdDevAtMinIllumination(1.5f)
+        .setMaxStdDevAtMaxIllumination(4f)
         .build()
 
     @Suppress("BlockingMethodInNonBlockingContext")

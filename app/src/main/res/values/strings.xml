@@ -7,10 +7,10 @@
 
     <string name="main_job_interval_preference_key">main_job_interval</string>
     <string name="main_job_interval_preference_value">5000</string>
-    <string name="main_job_interval_preference_title">Service interval</string>
-    <string name="main_job_interval_preference_summary">Interval (in milliseconds) between each luminosity processing</string>
-    <string name="main_job_interval_preference_validation_type">service interval must be an integer</string>
-    <string name="main_job_interval_preference_validation_positive">service interval must be greater than 0 ms</string>
+    <string name="main_job_interval_preference_title">Service delay</string>
+    <string name="main_job_interval_preference_summary">Delay (in milliseconds) between each luminosity processing job.</string>
+    <string name="main_job_interval_preference_validation_type">service delay must be an integer</string>
+    <string name="main_job_interval_preference_validation_positive">service delay must be greater than 0 ms</string>
 
     <string name="aggregate_sensor_values_preference_key">aggregate_sensor_values</string>
     <string name="aggregate_sensor_values_preference_value">true</string>
@@ -23,25 +23,18 @@
     <string name="buffer_size_preference_validation_type">buffer size must be an integer</string>
     <string name="buffer_size_preference_validation_positive">buffer size must be greater than 0</string>
 
-    <string name="min_aggregation_window_preference_key">min_aggregation_window</string>
-    <string name="min_aggregation_window_preference_value">1000</string>
-    <string name="min_aggregation_window_preference_title">Minimum aggregation window</string>
-    <string name="min_aggregation_window_preference_summary">Minimum time (in milliseconds) to wait for sensor events before brightness calculation</string>
-    <string name="min_aggregation_window_preference_validation_type">minimum aggregation window must be an integer</string>
-    <string name="min_aggregation_window_preference_validation_positive">minimum aggregation window must be greater or equal to 0</string>
+    <string name="max_std_dev_at_min_illumination_key">max_standard_deviation_at_min_illumination</string>
+    <string name="max_std_dev_at_min_illumination_value">1.5</string>
+    <string name="max_std_dev_at_min_illumination_title">Maximum standard deviation at low illumination</string>
+    <string name="max_std_dev_at_min_illumination_summary">Standard deviation threshold for the buffer to stabilize under in the dimmest settings. Puts brightness calculation on hold until condition met.</string>
+    <string name="max_std_dev_at_min_illumination_type">max low-illumination standard deviation threshold must be a decimal number</string>
+    <string name="max_std_dev_at_min_illumination_positive">max low-illumination deviation threshold must be greater or equal to 0</string>
 
-    <string name="base_standard_deviation_preference_key">base_standard_deviation</string>
-    <string name="base_standard_deviation_preference_value">1.5</string>
-    <string name="base_standard_deviation_preference_title">Base standard deviation threshold</string>
-    <string name="base_standard_deviation_preference_summary">Base buffer standard deviation threshold to reach before brightness calculation. Set to 256 to disable.</string>
-    <string name="base_standard_deviation_preference_validation_type">max standard deviation must be a decimal number</string>
-    <string name="base_standard_deviation_preference_validation_positive">max standard deviation must be greater or equal to 0</string>
-
-    <string name="extra_standard_deviation_preference_key">extra_standard_deviation</string>
-    <string name="extra_standard_deviation_preference_value">7.0</string>
-    <string name="extra_standard_deviation_preference_title">Extra standard deviation threshold</string>
-    <string name="extra_standard_deviation_preference_summary">Extra fluctuating margin (scaled to the buffer values heights) added to the base standard deviation threshold. This margin increases the acceptable threshold as higher (thus more spread out) illumination values fill the buffer. Set to 0 to disable.</string>
-    <string name="extra_standard_deviation_preference_validation_type">extra standard deviation threshold must be a decimal number</string>
-    <string name="extra_standard_deviation_preference_validation_positive">extra standard deviation threshold must be greater or equal to 0</string>
+    <string name="max_std_dev_at_max_illumination_key">max_standard_deviation_at_max_illumination</string>
+    <string name="max_std_dev_at_max_illumination_value">7.0</string>
+    <string name="max_std_dev_at_max_illumination_title">Maximum standard deviation at high illumination</string>
+    <string name="max_std_dev_at_max_illumination_summary">Standard deviation threshold for the buffer to stabilize under in the brightest settings. The effective standard deviation threshold is scaled between this maximum value</string>
+    <string name="max_std_dev_at_max_illumination_type">max high-illumination standard deviation threshold must be a decimal number</string>
+    <string name="max_std_dev_at_max_illumination_positive">max high-illumination standard deviation threshold must be greater or equal to 0</string>
 
 </resources>

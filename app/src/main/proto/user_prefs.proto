@@ -9,6 +9,6 @@ message UserPreferences {
   bool aggregate_sensor_values = 3;
   uint32 buffer_size = 4;
   uint64 min_aggregation_window = 5;
-  float base_standard_deviation = 6;
-  float extra_standard_deviation = 7;
+  float max_std_dev_at_min_illumination = 6;
+  float max_std_dev_at_max_illumination = 7;
 }

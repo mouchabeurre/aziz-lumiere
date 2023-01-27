@@ -21,10 +21,13 @@ class BrightnessMapper(bufferSize: Int, private val profile: Profile) {
         upsertBuffer(BrightnessEvent(brightness, eventValue, eventTime))
     }
 
-    fun getBufferMedian(buffer: List<BrightnessEvent>): BrightnessEvent? {
-        if (buffer.isEmpty()) {
-            return null
-        }
+    fun getBufferMean(buffer: List<BrightnessEvent>): Int? {
+        if (buffer.isEmpty()) return null
+        return buffer.sumOf { it.brightness }.div(buffer.size)
+    }
+
+    private fun getBufferMedian(buffer: List<BrightnessEvent>): BrightnessEvent? {
+        if (buffer.isEmpty()) return null
         buffer.sortedBy { it.brightness }.let { sortedBuffer ->
             val index = if (sortedBuffer.size % 2 == 0) {
                 sortedBuffer.size / 2 - 1
@@ -35,7 +38,8 @@ class BrightnessMapper(bufferSize: Int, private val profile: Profile) {
         }
     }
 
-    fun getBufferStandardDeviation(buffer: List<BrightnessEvent>): Float {
+    fun getBufferStandardDeviation(buffer: List<BrightnessEvent>): Float? {
+        if (buffer.isEmpty()) return null
         val brightnessValues = buffer
             .map { it.brightness.toFloat() }
         val mean = brightnessValues.sum() / buffer.size
@@ -45,9 +49,10 @@ class BrightnessMapper(bufferSize: Int, private val profile: Profile) {
         return sqrt(sumOfSquare / buffer.size)
     }
 
-    fun getBufferScaleToMaxValues(buffer: List<BrightnessEvent>): Float {
-        val brightnessSum = buffer.map { it.brightness }.sum()
-        return brightnessSum / (MAX_BRIGHTNESS * buffer.size)
+    fun getBufferMaxStandardDeviation(buffer: List<BrightnessEvent>, stdDevMin: Float, stdDevMax: Float): Float? {
+        return getBufferMedian(buffer)?.let {
+            (it.brightness / MAX_BRIGHTNESS) * stdDevMax + stdDevMin
+        }
     }
 
     fun currentBuffer(): List<BrightnessEvent> {

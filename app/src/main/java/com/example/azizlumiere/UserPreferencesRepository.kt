@@ -60,20 +60,20 @@ class UserPreferencesRepository(private val context: Context) {
         }
     }
 
-    suspend fun setBaseStandardDeviation(threshold: Float) {
+    suspend fun setMinStdDevAtMinIllumination(threshold: Float) {
         context.userPreferencesStore.updateData { store ->
-            log("updating store max std deviation with $threshold")
+            log("updating store stdDevAtMinIllumination $threshold")
             store.toBuilder()
-                .setBaseStandardDeviation(threshold)
+                .setMaxStdDevAtMinIllumination(threshold)
                 .build()
         }
     }
 
-    suspend fun setExtraStandardDeviation(margin: Float) {
+    suspend fun setMaxStdDevAtMaxIllumination(threshold: Float) {
         context.userPreferencesStore.updateData { store ->
-            log("updating store std deviation fluctuation margin with $margin")
+            log("updating store stdDevAtMaxIllumination $threshold")
             store.toBuilder()
-                .setExtraStandardDeviation(margin)
+                .setMaxStdDevAtMaxIllumination(threshold)
                 .build()
         }
     }

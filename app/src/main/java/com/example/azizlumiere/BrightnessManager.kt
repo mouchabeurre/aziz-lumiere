@@ -48,48 +48,41 @@ class BrightnessManager(
         }
         val currentBuffer = brightnessMapper.currentBuffer()
         stopAggregation()
-        brightnessMapper.getBufferMedian(currentBuffer)?.let { brightnessEvent ->
-            changeScreenBrightness(brightnessEvent.brightness)
+        brightnessMapper.getBufferMean(currentBuffer)?.let { brightness ->
+            changeScreenBrightness(brightness)
         }
     }
 
     suspend fun setBrightnessAverage() {
         startAggregation()
-        val minAggregationWindow = config.minAggregationWindow
-        val maxStandardDeviation = config.baseStandardDeviation
-        val fluctuationMargin = config.extraStandardDeviation
+        val stdDevAtMinIllumination = config.maxStdDevAtMinIllumination
+        val stdDevAtMaxIllumination = config.maxStdDevAtMaxIllumination - stdDevAtMinIllumination
         val bufferSize = config.bufferSize
         val startTime = System.currentTimeMillis()
-        var currentBufferCount = 0
+        val defaultCurrentStdDev = stdDevAtMaxIllumination + 1
+        val defaultMaxStdDev = 0f
+        var currentBuffer = brightnessMapper.currentBuffer()
+        var currentBufferCount = currentBuffer.size
         var currentTime = startTime
-        var currentDeviation = maxStandardDeviation + 1
-        var fluctuationRatio = 0f
-        while (
-            (currentBufferCount < bufferSize || currentDeviation > maxStandardDeviation + fluctuationRatio * fluctuationMargin)
-            && (currentTime - startTime <= minAggregationWindow || currentDeviation > maxStandardDeviation + fluctuationRatio * fluctuationMargin)
-        ) {
+        var currentStdDev = defaultCurrentStdDev
+        var maxStdDev = defaultMaxStdDev
+        while (currentBufferCount < bufferSize || currentStdDev > maxStdDev) {
             delay(1200L)
-            val currentBuffer = brightnessMapper.currentBuffer()
-            if (currentBuffer.isNotEmpty()) {
-                currentBufferCount = currentBuffer.size
-                currentDeviation = brightnessMapper.getBufferStandardDeviation(currentBuffer)
-                fluctuationRatio =
-                    brightnessMapper.getBufferScaleToMaxValues(currentBuffer)
-            }
+            currentBuffer = brightnessMapper.currentBuffer()
+            currentBufferCount = currentBuffer.size
+            currentStdDev = brightnessMapper.getBufferStandardDeviation(currentBuffer) ?: stdDevAtMaxIllumination + 1
+            maxStdDev = brightnessMapper.getBufferMaxStandardDeviation(currentBuffer, stdDevAtMinIllumination, stdDevAtMaxIllumination) ?: 0f
             currentTime = System.currentTimeMillis()
 
             val bufferLog = "buffer count: $currentBufferCount"
-            val deviationLog = "current deviation: $currentDeviation (max: $maxStandardDeviation)"
-            val extraCoefLog =
-                "extra coef: $fluctuationRatio (${fluctuationRatio * fluctuationMargin})"
+            val deviationLog = "current deviation: $currentStdDev (max: $maxStdDev)"
             val timeDeltaLog =
-                "time delta: ${currentTime - startTime} (maxWindow: $minAggregationWindow)"
-            log("$bufferLog, $deviationLog, $extraCoefLog, $timeDeltaLog")
+                "time delta: ${currentTime - startTime}"
+            log("$bufferLog, $deviationLog, $timeDeltaLog")
         }
-        val currentBuffer = brightnessMapper.currentBuffer()
         stopAggregation()
-        brightnessMapper.getBufferMedian(currentBuffer)?.let { brightnessEvent ->
-            changeScreenBrightness(brightnessEvent.brightness)
+        brightnessMapper.getBufferMean(currentBuffer)?.let { brightness ->
+            changeScreenBrightness(brightness)
         }
     }
 

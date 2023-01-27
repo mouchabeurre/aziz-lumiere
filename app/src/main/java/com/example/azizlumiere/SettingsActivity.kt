@@ -112,35 +112,8 @@ class SettingsActivity : AppCompatActivity() {
                         false
                     }
                 }
-            val minAggregationWindowPreference = preferenceScreen
-                .findPreference<EditTextPreference>(getString(R.string.min_aggregation_window_preference_key))
-                ?.also {
-                    it.setOnBindEditTextListener { editText ->
-                        editText.inputType =
-                            InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
-
-                    }
-                    it.setOnPreferenceChangeListener { _, newValue ->
-                        (newValue as String).toLongOrNull()?.let { value ->
-                            if (value >= 0) {
-                                lifecycleScope.launch {
-                                    userPreferencesRepository.setMinAggregationWindow(value)
-                                }
-                            } else {
-                                showValidationError(
-                                    getString(R.string.min_aggregation_window_preference_validation_positive)
-                                )
-                            }
-                        } ?: run {
-                            showValidationError(
-                                getString(R.string.min_aggregation_window_preference_validation_type)
-                            )
-                        }
-                        false
-                    }
-                }
-            val maxStandardDeviationPreference = preferenceScreen
-                .findPreference<EditTextPreference>(getString(R.string.base_standard_deviation_preference_key))
+            val maxStdDevMinIlluminationPreference = preferenceScreen
+                .findPreference<EditTextPreference>(getString(R.string.max_std_dev_at_min_illumination_key))
                 ?.also {
                     it.setOnBindEditTextListener { editText ->
                         editText.inputType =
@@ -151,23 +124,23 @@ class SettingsActivity : AppCompatActivity() {
                         (newValue as String).toFloatOrNull()?.let { value ->
                             if (value >= 0) {
                                 lifecycleScope.launch {
-                                    userPreferencesRepository.setBaseStandardDeviation(value)
+                                    userPreferencesRepository.setMinStdDevAtMinIllumination(value)
                                 }
                             } else {
                                 showValidationError(
-                                    getString(R.string.min_aggregation_window_preference_validation_positive)
+                                    getString(R.string.max_std_dev_at_min_illumination_positive)
                                 )
                             }
                         } ?: run {
                             showValidationError(
-                                getString(R.string.min_aggregation_window_preference_validation_type)
+                                getString(R.string.max_std_dev_at_min_illumination_type)
                             )
                         }
                         false
                     }
                 }
-            val standardDeviationFluctuationMarginPreference = preferenceScreen
-                .findPreference<EditTextPreference>(getString(R.string.extra_standard_deviation_preference_key))
+            val maxStdDevMaxIlluminationPreference = preferenceScreen
+                .findPreference<EditTextPreference>(getString(R.string.max_std_dev_at_max_illumination_key))
                 ?.also {
                     it.setOnBindEditTextListener { editText ->
                         editText.inputType =
@@ -179,18 +152,18 @@ class SettingsActivity : AppCompatActivity() {
                             if (value >= 0) {
 
                                 lifecycleScope.launch {
-                                    userPreferencesRepository.setExtraStandardDeviation(
+                                    userPreferencesRepository.setMaxStdDevAtMaxIllumination(
                                         value
                                     )
                                 }
                             } else {
                                 showValidationError(
-                                    getString(R.string.extra_standard_deviation_preference_validation_positive)
+                                    getString(R.string.max_std_dev_at_max_illumination_positive)
                                 )
                             }
                         } ?: run {
                             showValidationError(
-                                getString(R.string.extra_standard_deviation_preference_validation_type)
+                                getString(R.string.max_std_dev_at_max_illumination_type)
                             )
                         }
                         false
@@ -203,12 +176,10 @@ class SettingsActivity : AppCompatActivity() {
                     aggregateSensorValuesPreference?.isChecked =
                         userPreferences.aggregateSensorValues
                     bufferSizePreference?.text = userPreferences.bufferSize.toString()
-                    minAggregationWindowPreference?.text =
-                        userPreferences.minAggregationWindow.toString()
-                    maxStandardDeviationPreference?.text =
-                        userPreferences.baseStandardDeviation.toString()
-                    standardDeviationFluctuationMarginPreference?.text =
-                        userPreferences.extraStandardDeviation.toString()
+                    maxStdDevMinIlluminationPreference?.text =
+                        userPreferences.maxStdDevAtMinIllumination.toString()
+                    maxStdDevMaxIlluminationPreference?.text =
+                        userPreferences.maxStdDevAtMaxIllumination.toString()
                     log("updated preference screen preferences")
                 }
             }

@@ -1,6 +1,7 @@
 package com.example.azizlumiere
 
 import android.app.*
+import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -137,7 +138,7 @@ class ForegroundService : Service() {
 
         val pendingIntent: PendingIntent =
             Intent(this, MainActivity::class.java).let { notificationIntent ->
-                PendingIntent.getActivity(this, 0, notificationIntent, 0)
+                PendingIntent.getActivity(this, 0, notificationIntent, FLAG_IMMUTABLE)
             }
 
         val builder: Notification.Builder = Notification.Builder(

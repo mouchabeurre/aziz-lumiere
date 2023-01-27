@@ -23,29 +23,20 @@
         android:title="@string/buffer_size_preference_title" />
     <EditTextPreference
         android:dependency="@string/aggregate_sensor_values_preference_key"
-        android:inputType="number"
-        android:key="@string/min_aggregation_window_preference_key"
+        android:inputType="numberDecimal"
+        android:key="@string/max_std_dev_at_min_illumination_key"
         android:persistent="false"
         android:selectAllOnFocus="true"
         android:singleLine="true"
-        android:summary="@string/min_aggregation_window_preference_summary"
-        android:title="@string/min_aggregation_window_preference_title" />
+        android:summary="@string/max_std_dev_at_min_illumination_summary"
+        android:title="@string/max_std_dev_at_min_illumination_title" />
     <EditTextPreference
         android:dependency="@string/aggregate_sensor_values_preference_key"
         android:inputType="numberDecimal"
-        android:key="@string/base_standard_deviation_preference_key"
+        android:key="@string/max_std_dev_at_max_illumination_key"
         android:persistent="false"
         android:selectAllOnFocus="true"
         android:singleLine="true"
-        android:summary="@string/base_standard_deviation_preference_summary"
-        android:title="@string/base_standard_deviation_preference_title" />
-    <EditTextPreference
-        android:dependency="@string/aggregate_sensor_values_preference_key"
-        android:inputType="numberDecimal"
-        android:key="@string/extra_standard_deviation_preference_key"
-        android:persistent="false"
-        android:selectAllOnFocus="true"
-        android:singleLine="true"
-        android:summary="@string/extra_standard_deviation_preference_summary"
-        android:title="@string/extra_standard_deviation_preference_title" />
+        android:summary="@string/max_std_dev_at_max_illumination_summary"
+        android:title="@string/max_std_dev_at_max_illumination_title" />
 </PreferenceScreen>
